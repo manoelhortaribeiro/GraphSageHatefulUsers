@@ -108,3 +108,5 @@ ENV/
 *.pickle
 *.pkl
 
+hate/*
+suspended/*

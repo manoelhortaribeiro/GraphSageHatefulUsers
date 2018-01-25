@@ -3,7 +3,7 @@ import torch.nn as nn
 from torch.nn import init
 import torch.nn.functional as F
 
-class Encoder(nn.Module):
+class Encoder(nn.BatchNorm1d):
     """
     Encodes a node's using 'convolutional' GraphSage approach
     """
@@ -12,7 +12,7 @@ class Encoder(nn.Module):
             num_sample=10,
             base_model=None, gcn=False, cuda=False, 
             feature_transform=False): 
-        super(Encoder, self).__init__()
+        super(Encoder, self).__init__(feature_dim)
 
         self.features = features
         self.feat_dim = feature_dim
