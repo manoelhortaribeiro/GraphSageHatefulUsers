@@ -9,7 +9,6 @@ import numpy as np
 import random
 import torch
 import time
-import matplotlib.pyplot as plt
 
 from graphsage.encoders import Encoder
 from graphsage.aggregators import MeanAggregator
@@ -86,7 +85,7 @@ def run_hate(gcn, features, weights,  edges, flag_index="hate", num_features=320
     np.random.seed(1)
     random.seed(1)
     num_nodes = 100386
-    feat_data, labels, adj_lists = load_hate(features ,edges, num_features)
+    feat_data, labels, adj_lists = load_hate(features, edges, num_features)
     features = nn.Embedding(num_nodes, num_features)
     features.weight = nn.Parameter(torch.FloatTensor(feat_data), requires_grad=False)
 
@@ -153,10 +152,16 @@ def run_hate(gcn, features, weights,  edges, flag_index="hate", num_features=320
                     y_true = [1 if v == 1 else 0 for v in labels_true_validation]
                     y_pred = [1 if v == 1 else 0 for v in labels_pred_validation]
                 fscore = f1_score(y_true, y_pred, labels=None, pos_label=1, average='binary', sample_weight=None)
-                print(batch, cum_loss / 30, fscore)
+                recall = recall_score(y_true, y_pred, labels=None, pos_label=1, average='binary', sample_weight=None)
+                print(confusion_matrix(y_true, y_pred))
+                print(fscore, recall)
+
+                # print(batch, cum_loss / 30, fscore)
                 cum_loss = 0
 
-                if fscore > 0.65:
+                if fscore > 0.65 and flag_index == "hate":
+                    break
+                if fscore >= 0.50 and recall > 0.8 and flag_index != "hate":
                     break
 
         val_output = graphsage.forward(test)
@@ -168,7 +173,11 @@ def run_hate(gcn, features, weights,  edges, flag_index="hate", num_features=320
 
         labels_true_test = labels[test].flatten()
 
-        y_true = [1 if v == 2 else 0 for v in labels_true_test]
+        if flag_index == "hate":
+            y_true = [1 if v == 2 else 0 for v in labels_true_test]
+        else:
+            y_true = [1 if v else 0 for v in labels_true_test]
+
 
         fpr, tpr, _ = roc_curve(y_true, labels_pred_score)
 
@@ -176,26 +185,11 @@ def run_hate(gcn, features, weights,  edges, flag_index="hate", num_features=320
 
         auc_test.append(auc(fpr, tpr))
         y_pred = [1 if v else 0 for v in labels_pred_test]
-
         accuracy_test.append(accuracy_score(y_true, y_pred))
-        recall_test.append(recall_score(y_true, y_pred, pos_label=1))
+        recall_test.append(f1_score(y_true, y_pred))
+        print(confusion_matrix(y_true, y_pred))
 
-        # print(confusion_matrix(y_true, y_pred))
-        # print("Precision   %0.4f" % accuracy_test[-1])
-        # print("Recall   %0.4f" % recall_test[-1])
-        # print("AUC   %0.4f" % auc_test[-1])
-        # plt.figure()
-        # lw = 2
-        # plt.plot(fpr, tpr, color='darkorange',
-        #          lw=lw, label='ROC curve (area = %0.2f)' % auc(fpr, tpr))
-        # plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
-        # plt.xlim([0.0, 1.0])
-        # plt.ylim([0.0, 1.05])
-        # plt.xlabel('False Positive Rate')
-        # plt.ylabel('True Positive Rate')
-        # plt.title('Receiver operating characteristic example')
-        # plt.legend(loc="lower right")
-        # plt.show()
+
 
     accuracy_test = np.array(accuracy_test)
     recall_test = np.array(recall_test)
@@ -207,41 +201,20 @@ def run_hate(gcn, features, weights,  edges, flag_index="hate", num_features=320
 
 
 if __name__ == "__main__":
-    # print("GraphSage all hate")
-    # run_hate(gcn=False, edges="hate/users.edges",
-    #          features="hate/users_hate_all.content",
-    #          num_features=320, weights=[1, 0, 10])
-    # print("GraphSage glove hate")
-    # run_hate(gcn=False,
-    #          edges="hate/users.edges",
-    #          features="hate/users_hate_glove.content",
-    #          num_features=300, weights=[1, 0, 10]))
-    # print("GCN all hate")
-    # run_hate(gcn=True, edges="hate/users.edges",
-    #          features="hate/users_hate_all.content",
-    #          num_features=320, weights=[1, 0, 10]))
-    # print("GCN glove hate")
-    # run_hate(gcn=True,
-    #          edges="hate/users.edges",
-    #          features="hate/users_hate_glove.content",
-    #          num_features=300, weights=[1, 0, 10]))
+    print("GraphSage all hate")
+    run_hate(gcn=False, edges="hate/users.edges", features="hate/users_hate_all.content",
+             num_features=320, weights=[1, 0, 10])
+
+    print("GraphSage glove hate")
+    run_hate(gcn=False,  edges="hate/users.edges", features="hate/users_hate_glove.content",
+             num_features=300, weights=[1, 0, 10])
+
     print("GraphSage all suspended")
-    run_hate(gcn=False, edges="suspended/users.edges",
-             features="suspended/users_suspended_all.content",
-             flag_index="suspended",
-             num_features=320, weights=[1, 10],)
-    # print("GraphSage glove hate")
-    # run_hate(gcn=False,
-    #          edges="hate/users.edges",
-    #          features="hate/users_hate_glove.content",
-    #          num_features=300)
-    # print("GCN all hate")
-    # run_hate(gcn=True, edges="hate/users.edges",
-    #          features="hate/users_hate_all.content",
-    #          num_features=320)
-    # print("GCN glove hate")
-    # run_hate(gcn=True,
-    #          edges="hate/users.edges",
-    #          features="hate/users_hate_glove.content",
-    #          num_features=300)
+    run_hate(gcn=False, edges="suspended/users.edges", features="suspended/users_suspended_all.content",
+             flag_index="suspended", num_features=320, weights=[1, 15], batch_size=128)
+
+    print("GraphSage glove suspended")
+    run_hate(gcn=False, edges="suspended/users.edges", features="suspended/users_suspended_glove.content",
+             flag_index="suspended",  num_features=300, weights=[1, 15], batch_size=128)
+
 

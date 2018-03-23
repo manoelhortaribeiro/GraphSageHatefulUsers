@@ -1,12 +1,5 @@
-# Reference PyTorch GraphSAGE Implementation
-### Author: William L. Hamilton
+# GraphSAGE Implementation for Characterizing and Detecting Hateful Users on Twitter
 
-
-Basic reference PyTorch implementation of GraphSAGE.
-This reference implementation is not as fast as the TensorFlow version for large graphs, but the code is easier to read and it performs better on small-graph benchmarks.
-The code is also intended to be more extensible and easier to work with the the TensorFlow version.
-
-Currently, only supervised versions of GraphSAGE-mean and GraphSAGE-GCN are implemented. 
 
 #### Requirements
 
@@ -14,6 +7,19 @@ pytorch >0.2 is required.
 
 #### Running examples
 
-Execute `python -m graphsage.model` to run the Cora example.
-It assumes that CUDA is not being used, but modifying the run functions in `model.py` in the obvious way can change this.
-There is also a pubmed example (called via the `run_pubmed` function in model.py).
+1. Download the dataset from [kaggle](https://www.kaggle.com/manoelribeiro/hateful-users-on-twitter).
+
+2. You need to create folders `hate` and `suspended` as follows:
+
+       |- hate
+       |---- users.edges
+       |---- users_all_neighborhood.csv
+       |---- users_hate_all.content
+       |---- users_hate_glove.content
+       |- suspended
+       |---- users.edges
+       |---- users_all_neighborhood.csv
+       |---- users_suspended_all.content
+       |---- users_suspended_glove.content
+       
+3.  Execute `python -m graphsage.model` to replicate everything.
